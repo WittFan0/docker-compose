@@ -1,0 +1,8 @@
+# Blacklist everything
+*
+# Whitelist this file
+!.gitignore
+# Whitelist README
+!README.md
+# Whitelist docker compose files. 
+!docker-compose-*.yml

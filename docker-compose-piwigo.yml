@@ -1,0 +1,93 @@
+version: "3.9"
+
+## Taken from https://raw.githubusercontent.com/htpcBeginner/docker-traefik/master/docker-compose.yml
+
+########################### NETWORKS
+# You may customize the network subnet (192.168.88.0/24) below as you please.
+# Docker Compose version 3.5 or higher required to define networks this way.
+
+networks:
+  piwigo:
+    name: piwigo
+    # attachable: true
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.88.0/24
+  # If you decide to use Socket Proxy, you need socket_proxy network as we. See https://www.smarthomebeginner.com/traefik-docker-security-best-practices/#9_Use_a_Docker_Socket_Proxy
+
+#volumes:
+#  mariadb-volume:
+
+########################### SECRETS
+secrets:
+  mail_address:
+    file: $SECRETSDIR/mail_address
+  mail_password:
+    file: $SECRETSDIR/mail_password
+  piwigo_db_password:
+    file: $SECRETSDIR/piwigo_db_password
+  db_root_password:
+    file: $SECRETSDIR/db_root_password
+
+########################### SERVICES
+
+services:
+  db:
+    networks:
+      piwigo: {}
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    image: mariadb:latest
+    container_name: piwigo-db
+    volumes:
+        - $DOCKERDIR/appdata/mariadb:/var/lib/mysql
+        # - /usr/local/etc/mariadb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    secrets:
+      - piwigo_db_password
+      - db_root_password
+    environment:
+      - MARIADB_USER=piwigo
+      - MARIADB_DATABASE=piwigo
+      - MYSQL_PASSWORD_FILE=/run/secrets/piwigo_db_password
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
+
+  phpmyadmin:
+    networks:
+      piwigo: {}
+    restart: unless-stopped
+    image: phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - 51080:80
+    depends_on:
+      - db
+    links:   # declares that this container must be able to connect to the following services
+      - 'db:piwigo-db' # The phpMyAdmin image is configured to reference a running database container named "db"
+    environment:
+      - PMA_ARBITRARY=1
+
+  piwigo:
+    networks:
+      piwigo: {}
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    image: lscr.io/linuxserver/piwigo:latest
+    container_name: piwigo
+    depends_on:
+      - db
+    links:   # declares that this container must be able to connect to the following services
+      - 'db:piwigo-db'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Detroit
+    volumes:
+      - $DOCKERDIR/appdata/piwigo/config:/config
+      - $MEDIADIR/piwigo:/gallery
+    ports:
+      - 52080:80
+      - 52443:443  # Moving port to allow Nextcloud to bind to 443.  This may break Piwigo functionality.
