@@ -6,3 +6,5 @@
 !README.md
 # Whitelist docker compose files. 
 !docker-compose-*.yml
+# Whitelist docker env file
+!.env
