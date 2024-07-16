@@ -1,11 +1,3 @@
-version: "3.9"
-
-## Taken from https://raw.githubusercontent.com/htpcBeginner/docker-traefik/master/docker-compose.yml
-
-########################### NETWORKS
-# You may customize the network subnet (192.168.89.0/24) below as you please.
-# Docker Compose version 3.5 or higher required to define networks this way.
-
 networks:
   # default:
   #   driver: bridge
@@ -14,44 +6,30 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.89.0/24
+        - subnet: 172.31.254.0/24
   # If you decide to use Socket Proxy, you need socket_proxy network as we. See https://www.smarthomebeginner.com/traefik-docker-security-best-practices/#9_Use_a_Docker_Socket_Proxy
-
-########################### EXTENSION FIELDS
-# Helps eliminate repetition of sections
-# More Info on how to use this: https://github.com/htpcBeginner/docker-traefik/pull/228
-
-# Common environment values
 x-environment: &default-tz-puid-pgid
   TZ: $TZ
   PUID: $PUID
   PGID: $PGID
-
-# Keys common to some of the core services that we always to automatically restart on failure
 x-common-keys-core: &common-keys-core
   networks:
     - npm_proxy
   security_opt:
     - no-new-privileges:true
   restart: always
-
-# Keys common to some of the dependent services/apps
 x-common-keys-apps: &common-keys-apps
   networks:
     - npm_proxy
   security_opt:
     - no-new-privileges:true
   restart: unless-stopped
-
-# Keys common to some of the services in media-services.txt
 x-common-keys-media: &common-keys-media
   networks:
     - npm_proxy
   security_opt:
     - no-new-privileges:true
   restart: "no"
-
-########################### SECRETS
 secrets:
   mail_address:
     file: $SECRETSDIR/mail_address
@@ -59,12 +37,8 @@ secrets:
     file: $SECRETSDIR/mail_password
   plex_claim:
     file: $SECRETSDIR/plex_claim
-
-########################### SERVICES
 services:
-
   ############################# FRONTENDS
-
   # # Nginx Proxy Manager - Reverse Proxy with LetsEncrypt
   # npm:
   #   <<: *common-keys-core # See EXTENSION FIELDS at the top
@@ -83,13 +57,12 @@ services:
   #     - '443:443' # Public HTTPS Port. Port Forwarding on Router is ON.
   #     - '81:81' # Admin Web Port. Port Forwarding on Router is OFF. Internal Home Network Access only - 192.168.89.254:81.
   #   volumes:
-  #     - $DOCKERDIR/appdata/npm/config:/config 
-  #     - $DOCKERDIR/appdata/npm/letsencrypt:/etc/letsencrypt
-  #     - $DOCKERDIR/appdata/npm/data:/data
+  #     - $APPDATADIR/npm/config:/config 
+  #     - $APPDATADIR/npm/letsencrypt:/etc/letsencrypt
+  #     - $APPDATADIR/npm/data:/data
   #   environment:
   #     DB_SQLITE_FILE: "/config/database.sqlite"
   #     DISABLE_IPV6: 'true'
-
   # Portainer - WebUI for Containers
   portainer:
     <<: *common-keys-core # See EXTENSION FIELDS at the top
@@ -103,10 +76,9 @@ services:
       - "9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Use Docker Socket Proxy and comment this line out, for improved security.
-      - $DOCKERDIR/appdata/portainer/data:/data # Change to local directory if you want to save/transfer config locally.
+      - $APPDATADIR/portainer/data:/data # Change to local directory if you want to save/transfer config locally.
     environment:
       - TZ=$TZ
-
   # # Heimdall - Application Dashboard
   # heimdall:
   #   <<: *common-keys-core # See EXTENSION FIELDS at the top
@@ -116,10 +88,9 @@ services:
   #     - "83:80" # 80 to 82 already taken by other services
   #     # - "444:443" # 443 used by Nginx Proxy Manager. Disabled because we will put Heimdall behind proxy.
   #   volumes:
-  #     - $DOCKERDIR/appdata/heimdall:/config
+  #     - $APPDATADIR/heimdall:/config
   #   environment:
   #     <<: *default-tz-puid-pgid
-
   ############################# DOWNLOADERS
   
   ## nzbget - Binary newsgrabber (NZB downloader)
@@ -133,11 +104,10 @@ services:
   #   ports:
   #     - "6789:6789"
   #   volumes:
-  #     - $DOCKERDIR/appdata/nzbget:/config
+  #     - $APPDATADIR/nzbget:/config
   #     - $DLDIR:/data/downloads
   #   environment:
   #     <<: *default-tz-puid-pgid
-
   # # TransmissionBT - Torrent Downloader
   # # For Proxmox LXC Containers - https://pve.proxmox.com/wiki/OpenVPN_in_LXC
   # transmission-vpn:
@@ -155,8 +125,8 @@ services:
   #     - /dev/net/tun
   #   volumes:
   #     - /etc/localtime:/etc/localtime:ro
-  #     - $DOCKERDIR/appdata/transmission-vpn/data:/data
-  #     - $DOCKERDIR/appdata/transmission-vpn/config:/config
+  #     - $APPDATADIR/transmission-vpn/data:/data
+  #     - $APPDATADIR/transmission-vpn/config:/config
   #     - $DLDIR:/data/downloads
   #   environment:
   #     <<: *default-tz-puid-pgid
@@ -185,7 +155,6 @@ services:
   #     TRANSMISSION_WATCH_DIR_ENABLED: "true"
   #     TRANSMISSION_DOWNLOAD_DIR: /data/downloads/torrents
   #     LOG_TO_STDOUT: "true"
-
   # # qBittorrent - Torrent downloader without VPN
   # qbittorrent:
   #   <<: *common-keys-apps # See EXTENSION FIELDS at the top
@@ -195,14 +164,12 @@ services:
   #   ports:
   #     - "8080:8080"
   #   volumes:
-  #     - $DOCKERDIR/appdata/qbittorrent:/config
+  #     - $APPDATADIR/qbittorrent:/config
   #     - $DLDIR:/data/downloads # Ensure that downloads folder is set to /data/downloads in qBittorrent
   #   environment:
   #     <<: *default-tz-puid-pgid
   #     UMASK_SET: 002
-
   ############################# PVRS
-
   # # Prowlarr - Indexer Proxy
   # prowlarr:
   #   <<: *common-keys-apps # See EXTENSION FIELDS at the top
@@ -214,11 +181,10 @@ services:
   #   ports:
   #     - "9696:9696"
   #   volumes:
-  #     - $DOCKERDIR/appdata/prowlarr:/config
+  #     - $APPDATADIR/prowlarr:/config
   #     - "/etc/localtime:/etc/localtime:ro"
   #   environment:
   #     <<: *default-tz-puid-pgid
-
   # # Lidarr - Music Management
   # lidarr:
   #   <<: *common-keys-media # See EXTENSION FIELDS at the top
@@ -230,13 +196,12 @@ services:
   #   ports:
   #     - "8686:8686"
   #   volumes:
-  #     - $DOCKERDIR/appdata/lidarr:/config
+  #     - $APPDATADIR/lidarr:/config
   #     - $DLDIR:/data/downloads
   #     - $MEDIADIR/music:/data/media/music
   #     - "/etc/localtime:/etc/localtime:ro"
   #   environment:
   #     <<: *default-tz-puid-pgid
-
   # # Radarr - Movie management
   # radarr:
   #   <<: *common-keys-media # See EXTENSION FIELDS at the top
@@ -248,12 +213,11 @@ services:
   #   ports:
   #     - "7878:7878"
   #   volumes:
-  #     - $DOCKERDIR/appdata/radarr:/config
+  #     - $APPDATADIR/radarr:/config
   #     - $DATADIR:/data
   #     - "/etc/localtime:/etc/localtime:ro"
   #   environment:
   #     <<: *default-tz-puid-pgid
-
   # # Sonarr - TV Shows management
   # sonarr:
   #   <<: *common-keys-media # See EXTENSION FIELDS at the top
@@ -265,12 +229,11 @@ services:
   #   ports:
   #     - "8989:8989"
   #   volumes:
-  #     - $DOCKERDIR/appdata/sonarr:/config
+  #     - $APPDATADIR/sonarr:/config
   #     - $DATADIR:/data
   #     - "/etc/localtime:/etc/localtime:ro"
   #   environment:
   #     <<: *default-tz-puid-pgid
-
   # # Readarr - Books management
   # readarr:
   #   <<: *common-keys-media # See EXTENSION FIELDS at the top
@@ -279,33 +242,30 @@ services:
   #   ports:
   #     - "8987:8987"
   #   volumes:
-  #     - $DOCKERDIR/appdata/readarr:/config
+  #     - $APPDATADIR/readarr:/config
   #     - $DATADIR:/data
   #     - "/etc/localtime:/etc/localtime:ro"
   #   environment:
   #     <<: *default-tz-puid-pgid
   #     UMASK: 002
   #     #ARGS: ""
-
   ############################# MEDIA
-
-  # Airsonic Advanced - Music Server
-  airsonic:
-    <<: *common-keys-media # See EXTENSION FIELDS at the top
-    image: lscr.io/linuxserver/airsonic-advanced
-    container_name: airsonic-advanced
-    ports: 
-      - "4040:4040"
-      - "4041:4041" #UPnp
-    volumes:
-      - $DOCKERDIR/appdata/airsonic/podcasts:/data/podcasts
-      - $DOCKERDIR/appdata/airsonic/playlists:/data/playlists
-      - $DOCKERDIR/appdata/airsonic/config:/config
-      - $MEDIADIR/music:/data/music:ro
-    environment:
-      <<: *default-tz-puid-pgid
-      JAVA_OPTS: '-Dserver.forward-headers-strategy=native' # Optional - if you use a reverse-proxy
-
+  # # Airsonic Advanced - Music Server
+  # airsonic:
+  #   <<: *common-keys-media # See EXTENSION FIELDS at the top
+  #   image: lscr.io/linuxserver/airsonic-advanced
+  #   container_name: airsonic-advanced
+  #   ports: 
+  #     - "4040:4040"
+  #     - "4041:4041" #UPnp
+  #   volumes:
+  #     - $APPDATADIR/airsonic/podcasts:/data/podcasts
+  #     - $APPDATADIR/airsonic/playlists:/data/playlists
+  #     - $APPDATADIR/airsonic/config:/config
+  #     - $MEDIADIR/music:/data/music:ro
+  #   environment:
+  #     <<: *default-tz-puid-pgid
+  #     JAVA_OPTS: '-Dserver.forward-headers-strategy=native' # Optional - if you use a reverse-proxy
   # # Jellyfin - Media Server
   # jellyfin:
   #   <<: *common-keys-media # See EXTENSION FIELDS at the top
@@ -320,16 +280,22 @@ services:
   #     <<: *default-tz-puid-pgid
   #     UMASK_SET: 022
   #   volumes:
-  #     - $DOCKERDIR/appdata/jellyfin:/config
+  #     - $APPDATADIR/jellyfin:/config
   #     - $DLDIR:/data/downloads
   #     - $MEDIADIR:/data/media
   #     - /dev/shm:/data/transcode # Offload transcoding to RAM if you have enough RAM
-
   # Plex - Media Server
   plexms:
     <<: *common-keys-core # See EXTENSION FIELDS at the top
     image: plexinc/pms-docker:public
     container_name: plexms
+    # runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: [gpu]
     ports:
       - "32400:32400/tcp"
       - "8324:8324/tcp"
@@ -343,8 +309,9 @@ services:
     devices:
       - /dev/dri:/dev/dri # for harware transcoding
     volumes:
-      - $DOCKERDIR/appdata/plexms:/config
+      - $APPDATADIR/plexms:/config
       - $MEDIADIR:/data
+      - /mnt/nvme_data/ncdata/__groupfolders/1:/data/photos/justus
       - /dev/shm:/transcode
     secrets:
       - plex_claim
@@ -355,7 +322,8 @@ services:
       PLEX_GID: $PGID
       ADVERTISE_IP: http://$SERVER_IP:32400/
       PLEX_CLAIM_FILE: /run/secrets/plex_claim
-
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: all
   # # Plex Meta Manager - Automatic Metadata Manager for Plex
   # plexmm:
   #   <<: *common-keys-media # See EXTENSION FIELDS at the top
@@ -369,8 +337,7 @@ services:
   #     PMM_TEST: "False" #optional
   #     PMM_NO_MISSING: "False" #optional
   #   volumes:
-  #     - $DOCKERDIR/appdata/plex-meta-manager:/config
-
+  #     - $APPDATADIR/plex-meta-manager:/config
   # Tautulli - Plex Stats and Monitoring
   tautulli:
     <<: *common-keys-media # See EXTENSION FIELDS at the top
@@ -379,11 +346,10 @@ services:
     ports:
       - "8181:8181"
     volumes:
-      - $DOCKERDIR/appdata/tautulli/config:/config
-      - $DOCKERDIR/appdata/plexms/Library/Application Support/Plex Media Server/Logs:/logs:ro # For tautulli Plex log viewer
+      - $APPDATADIR/tautulli/config:/config
+      - $APPDATADIR/plexms/Library/Application Support/Plex Media Server/Logs:/logs:ro # For tautulli Plex log viewer
     environment:
       <<: *default-tz-puid-pgid
-
   # # Ombi - Media Requests
   # ombi:
   #   <<: *common-keys-media # See EXTENSION FIELDS at the top
@@ -392,12 +358,10 @@ services:
   #   ports:
   #     - "3579:3579"
   #   volumes:
-  #     - $DOCKERDIR/appdata/ombi:/config
+  #     - $APPDATADIR/ombi:/config
   #   environment:
   #     <<: *default-tz-puid-pgid
-
   ############################# MEDIA FILE MANAGEMENT
-
   # # Bazarr - Subtitle Management
   # bazarr:
   #   <<: *common-keys-media # See EXTENSION FIELDS at the top
@@ -406,30 +370,28 @@ services:
   #   ports:
   #     - "6767:6767"
   #   volumes:
-  #     - $DOCKERDIR/appdata/bazarr:/config
+  #     - $APPDATADIR/bazarr:/config
   #     - $MEDIADIR:/data/media
   #   environment:
   #     <<: *default-tz-puid-pgid
-
-  # Picard - Music Library Tagging and Management
-  picard:
-    <<: *common-keys-media # See EXTENSION FIELDS at the top
-    image: mikenye/picard:latest
-    container_name: picard
-    ports:
-      - "5800:5800"
-    volumes:
-      - $MEDIADIR/music:/data:rw
-      - $DOCKERDIR/appdata/picard:/config:rw
-      - /dev/shm:/dev/shm
-    environment:
-      USER_ID: $PUID
-      GROUP_ID: $PGID
-      TZ: $TZ
-      UMASK: 002
-      DISPLAY_WIDTH: 1600
-      DISPLAY_HEIGHT: 960
-
+  # # Picard - Music Library Tagging and Management
+  # picard:
+  #   <<: *common-keys-media # See EXTENSION FIELDS at the top
+  #   image: mikenye/picard:latest
+  #   container_name: picard
+  #   ports:
+  #     - "5800:5800"
+  #   volumes:
+  #     - $MEDIADIR/music:/data:rw
+  #     - $APPDATADIR/picard:/config:rw
+  #     - /dev/shm:/dev/shm
+  #   environment:
+  #     USER_ID: $PUID
+  #     GROUP_ID: $PGID
+  #     TZ: $TZ
+  #     UMASK: 002
+  #     DISPLAY_WIDTH: 1600
+  #     DISPLAY_HEIGHT: 960
   # # Handbrake - Video Conversion (Transcoding and compression)
   # handbrake:
   #   <<: *common-keys-apps # See EXTENSION FIELDS at the top
@@ -439,8 +401,8 @@ services:
   #     - "5801:5800"
   #   volumes:
   #     - $DLDIR:/data/downloads
-  #     - $DOCKERDIR/appdata/handbrake/config:/config
-  #     - $DOCKERDIR/appdata/handbrake/watch:/watch
+  #     - $APPDATADIR/handbrake/config:/config
+  #     - $APPDATADIR/handbrake/watch:/watch
   #   environment:
   #     USER_ID: $PUID
   #     GROUP_ID: $PGID
@@ -452,9 +414,7 @@ services:
   #     DISPLAY_HEIGHT: 960
   #     AUTOMATED_CONVERSION_KEEP_SOURCE: 1
   #     VNC_PASSWORD: $HANDBRAKE_VNC_PASSWD
-
   ############################# UTILITIES
-
   # Dozzle - Real-time Docker Log Viewer
   dozzle:
     <<: *common-keys-apps # See EXTENSION FIELDS at the top
@@ -466,28 +426,24 @@ services:
       - "8081:8080" # qBittorrent is using port 8080
     environment:
       DOZZLE_LEVEL: info
-      DOZZLE_TAILSIZE: 300
       DOZZLE_FILTER: "status=running"
       # DOZZLE_FILTER: "label=log_me" # limits logs displayed to containers with this label.
       # DOCKER_HOST: tcp://socket-proxy:2375 # Use this instead if you have Socket Proxy enabled.
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Use Docker Socket Proxy and comment this line for improved security.
-
-  # File Browser - Explorer
-  filebrowser:
-    <<: *common-keys-core # See EXTENSION FIELDS at the top
-    image: filebrowser/filebrowser:s6
-    container_name: filebrowser
-    ports:
-      - "82:80" # 80 and 81 are used by Nginx Proxy Manager
-    volumes:
-      - $DOCKERDIR/appdata/filebrowser:/config 
-      - $USERDIR:/srv
-    environment:
-      <<: *default-tz-puid-pgid
-
+  # # File Browser - Explorer
+  # filebrowser:
+  #   <<: *common-keys-core # See EXTENSION FIELDS at the top
+  #   image: filebrowser/filebrowser:s6
+  #   container_name: filebrowser
+  #   ports:
+  #     - "82:80" # 80 and 81 are used by Nginx Proxy Manager
+  #   volumes:
+  #     - $APPDATADIR/filebrowser:/config 
+  #     - $MEDIADIR:/srv
+  #   environment:
+  #     <<: *default-tz-puid-pgid
   ############################# MAINTENANCE
-
   # # Docker-GC - Automatic Docker Garbage Collection
   # # Create docker-gc-exclude file
   # dockergc:
@@ -496,7 +452,7 @@ services:
   #   container_name: docker-gc
   #   volumes:
   #     - /var/run/docker.sock:/var/run/docker.sock # Use Docker Socket Proxy and comment this line for improved security.
-  #     - $DOCKERDIR/appdata/docker-gc/docker-gc-exclude:/etc/docker-gc-exclude # Create empty file
+  #     - $APPDATADIR/docker-gc/docker-gc-exclude:/etc/docker-gc-exclude # Create empty file
   #   environment:
   #     CRON: 0 0 0 * * ? # Everyday at midnight. Previously 0 0 * * *
   #     FORCE_IMAGE_REMOVAL: 1
@@ -506,7 +462,6 @@ services:
   #     CLEAN_UP_VOLUMES: 1
   #     TZ: $TZ
   #     # DOCKER_HOST: tcp://socket-proxy:2375 # Use this if you have Socket Proxy enabled.
-
   # Docker Image Update Notifier - receive notifications when a Docker image is updated on a Docker registry.
   diun:
     image: crazymax/diun:latest
@@ -514,13 +469,13 @@ services:
     container_name: diun
     command: serve
     volumes:
-      - $DOCKERDIR/appdata/diun/db:/data
+      - $APPDATADIR/diun/db:/data
       - /var/run/docker.sock:/var/run/docker.sock
     secrets:
       - mail_address
       - mail_password
     environment:
-      - TZ=America/Detroit
+      - TZ=$TZ
       - LOG_LEVEL=info
       - LOG_JSON=false
       - DIUN_WATCH_WORKERS=20
@@ -535,13 +490,11 @@ services:
       # - DIUN_NOTIF_MAIL_LOCALNAME=localhost
       - DIUN_NOTIF_MAIL_USERNAMEFILE=/run/secrets/mail_address
       - DIUN_NOTIF_MAIL_PASSWORDFILE=/run/secrets/mail_password
-      # - DIUN_NOTIF_MAIL_FROM=
+      - DIUN_NOTIF_MAIL_FROM=lancestyles1@gmail.com
       - DIUN_NOTIF_MAIL_TO=lancestyles1@gmail.com
       # - DIUN_NOTIF_MAIL_TEMPLATETITLE=
       # - DIUN_NOTIF_MAIL_TEMPLATEBODY=
     restart: always
-
-# # WatchTower - Automatic Docker Container Updates
   # watchtower:
   #   <<: *common-keys-core # See EXTENSION FIELDS at the top
   #   image: containrrr/watchtower
