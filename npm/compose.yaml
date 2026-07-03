@@ -288,7 +288,7 @@ services:
     <<: *common-keys-core # See EXTENSION FIELDS at the top
     image: plexinc/pms-docker:public
     container_name: plexms
-    # runtime: nvidia
+    runtime: nvidia
     deploy:
       resources:
         reservations:
@@ -296,21 +296,21 @@ services:
           - driver: nvidia
             capabilities: [gpu]
     ports:
-      - "32400:32400/tcp"
-      - "$SERVER_IP:8324:8324/tcp"
-      - "$SERVER_IP:32469:32469/tcp"
-      - "$SERVER_IP:1900:1900/udp" # Conflicts with xTeVe and Synology default ports
-      - "$SERVER_IP:32410:32410/udp"
-      - "$SERVER_IP:32412:32412/udp"
-      - "$SERVER_IP:32413:32413/udp"
-      - "$SERVER_IP:32414:32414/udp"
+      - "32400:32400/tcp" # remote connections
+      - "$SERVER_IP:8324:8324/tcp" # control Plex for Roku via Plex Companion
+      - "$SERVER_IP:32469:32469/tcp" # Plex DLNA Server
+      - "$SERVER_IP:1900:1900/udp" # Plex DLNA Server, Conflicts with xTeVe and Synology default ports
+      - "$SERVER_IP:32410:32410/udp" # DLNA Server
+      - "$SERVER_IP:32412:32412/udp" # DLNA Server
+      - "$SERVER_IP:32413:32413/udp" # DLNA Server
+      - "$SERVER_IP:32414:32414/udp" # DLNA Server
       - "$SERVER_IP:33400:33400" # If you use Plex Web Tools
     devices:
       - /dev/dri:/dev/dri # for harware transcoding
     volumes:
       - $APPDATADIR/plexms:/config
       - $MEDIADIR:/data
-      - /mnt/nvme_data/ncdata/__groupfolders/1:/data/photos/justus
+      - /mnt/sata_data/ncdata/__groupfolders/1:/data/photos/justus
       - /dev/shm:/transcode
     secrets:
       - plex_claim
