@@ -73,7 +73,7 @@ services:
     networks:
       - npm_proxy
     ports: 
-      - "9000:9000"
+      - "$SERVER_IP:9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Use Docker Socket Proxy and comment this line out, for improved security.
       - $APPDATADIR/portainer/data:/data # Change to local directory if you want to save/transfer config locally.
@@ -271,8 +271,7 @@ services:
   #   <<: *common-keys-media # See EXTENSION FIELDS at the top
   #   image: jellyfin/jellyfin:latest
   #   container_name: jellyfin
-  #   #devices:
-  #   #  - /dev/dri:/dev/dri # for harware transcoding
+  #   # network_mode: 'host'
   #   ports:
   #     - "8096:8096"
   #     - "8920:8920" # Emby also uses same port if running both
@@ -298,14 +297,14 @@ services:
             capabilities: [gpu]
     ports:
       - "32400:32400/tcp"
-      - "8324:8324/tcp"
-      - "32469:32469/tcp"
-      - "1900:1900/udp" # Conflicts with xTeVe and Synology default ports
-      - "32410:32410/udp"
-      - "32412:32412/udp"
-      - "32413:32413/udp"
-      - "32414:32414/udp"
-      - "33400:33400" # If you use Plex Web Tools
+      - "$SERVER_IP:8324:8324/tcp"
+      - "$SERVER_IP:32469:32469/tcp"
+      - "$SERVER_IP:1900:1900/udp" # Conflicts with xTeVe and Synology default ports
+      - "$SERVER_IP:32410:32410/udp"
+      - "$SERVER_IP:32412:32412/udp"
+      - "$SERVER_IP:32413:32413/udp"
+      - "$SERVER_IP:32414:32414/udp"
+      - "$SERVER_IP:33400:33400" # If you use Plex Web Tools
     devices:
       - /dev/dri:/dev/dri # for harware transcoding
     volumes:
@@ -344,7 +343,7 @@ services:
     image: linuxserver/tautulli:latest
     container_name: tautulli
     ports:
-      - "8181:8181"
+      - "$SERVER_IP:8181:8181"
     volumes:
       - $APPDATADIR/tautulli/config:/config
       - $APPDATADIR/plexms/Library/Application Support/Plex Media Server/Logs:/logs:ro # For tautulli Plex log viewer
@@ -423,7 +422,7 @@ services:
     networks:
       - npm_proxy
     ports:
-      - "8081:8080" # qBittorrent is using port 8080
+      - "$SERVER_IP:8081:8080" # qBittorrent is using port 8080
     environment:
       DOZZLE_LEVEL: info
       DOZZLE_FILTER: "status=running"
