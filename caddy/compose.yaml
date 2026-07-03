@@ -1,0 +1,21 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - $APPDATADIR/conf:/etc/caddy
+      - $APPDATADIR/site:/srv
+      - $APPDATADIR/caddy_data:/data
+      - $APPDATADIR/caddy_config:/config
+#     networks:
+#       - servernet
+# 
+# networks:
+#     servernet:
+#         external: true

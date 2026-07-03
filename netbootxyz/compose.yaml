@@ -1,0 +1,19 @@
+---
+services:
+  netbootxyz:
+    image: ghcr.io/netbootxyz/netbootxyz
+    container_name: netbootxyz
+    environment:
+      # - MENU_VERSION=2.0.84 # optional
+      - NGINX_PORT=8069 # optional
+      - WEB_APP_PORT=3000 # optional
+      - PUID=$PUID
+      - PGID=$PGID
+    volumes:
+      - $APPDATADIR/netbootxyz/config:/config # optional
+      - $APPDATADIR/netbootxyz/assets:/assets # optional
+    ports:
+      - $LANIP:3000:3000  # optional, destination should match ${WEB_APP_PORT} variable above.
+      - $LANIP:69:69/udp  # tftp port
+      - $LANIP:8069:8080  # optional, destination should match ${NGINX_PORT} variable above.
+    restart: unless-stopped
